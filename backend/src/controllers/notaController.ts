@@ -23,14 +23,15 @@ const actualizarPromedioAsignatura = async (uid: string, idAsignatura: string): 
     const data = doc.data();
     return {
       id: doc.id,
-      nombre: data.nombre as string,
-      nota: data.nota as number,
+      descripcion: data.descripcion as string,
+      calificacion: data.calificacion as number,
       porcentaje: data.porcentaje as number,
     };
   });
 
-  const promedioActual = calcularPromedioDesdeNotas(notas);
-  await asignaturaDocRef(uid, idAsignatura).update({ promedioActual });
+  const promedio = calcularPromedioDesdeNotas(notas);
+  const aprueba = promedio >= 3.0; // Asumiendo 3.0 como nota de aprobación
+  await asignaturaDocRef(uid, idAsignatura).update({ promedio, aprueba });
 };
 
 export const agregarNota = async (req: Request, res: Response): Promise<void> => {
@@ -55,24 +56,24 @@ export const agregarNota = async (req: Request, res: Response): Promise<void> =>
       return;
     }
 
-    const { nombre, nota, porcentaje } = req.body;
+    const { descripcion, calificacion, porcentaje } = req.body;
 
-    if (!nombre || nota === undefined || porcentaje === undefined) {
-      res.status(400).json({ error: 'nombre, nota y porcentaje son obligatorios' });
+    if (!descripcion || calificacion === undefined || porcentaje === undefined) {
+      res.status(400).json({ error: 'descripcion, calificacion y porcentaje son obligatorios' });
       return;
     }
 
-    const notaNumerica = Number(nota);
+    const calificacionNumerica = Number(calificacion);
     const porcentajeNumerico = Number(porcentaje);
 
-    if (Number.isNaN(notaNumerica) || Number.isNaN(porcentajeNumerico)) {
-      res.status(400).json({ error: 'nota y porcentaje deben ser valores numéricos' });
+    if (Number.isNaN(calificacionNumerica) || Number.isNaN(porcentajeNumerico)) {
+      res.status(400).json({ error: 'calificacion y porcentaje deben ser valores numéricos' });
       return;
     }
 
     const docRef = await notasRef(uid, idAsignatura).add({
-      nombre,
-      nota: notaNumerica,
+      descripcion,
+      calificacion: calificacionNumerica,
       porcentaje: porcentajeNumerico,
     });
 
@@ -80,8 +81,8 @@ export const agregarNota = async (req: Request, res: Response): Promise<void> =>
 
     const notaCreada: Nota = {
       id: docRef.id,
-      nombre,
-      nota: notaNumerica,
+      descripcion,
+      calificacion: calificacionNumerica,
       porcentaje: porcentajeNumerico,
     };
 
@@ -119,8 +120,8 @@ export const obtenerNotas = async (req: Request, res: Response): Promise<void> =
       const data = doc.data();
       return {
         id: doc.id,
-        nombre: data.nombre as string,
-        nota: data.nota as number,
+        descripcion: data.descripcion as string,
+        calificacion: data.calificacion as number,
         porcentaje: data.porcentaje as number,
       };
     });
@@ -163,5 +164,51 @@ export const eliminarNota = async (req: Request, res: Response): Promise<void> =
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: 'Error al eliminar la nota' });
+  }
+};
+
+export const actualizarNota = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const uid = req.user?.uid;
+    const idAsignatura = paramString(req.params.idAsignatura);
+    const idNota = paramString(req.params.idNota);
+
+    if (!uid) {
+      res.status(401).json({ error: 'Usuario no autenticado' });
+      return;
+    }
+
+    if (!idAsignatura || !idNota) {
+      res.status(400).json({ error: 'ID de asignatura y de nota son requeridos' });
+      return;
+    }
+
+    const { descripcion, calificacion, porcentaje } = req.body;
+
+    const updates: any = {};
+    if (descripcion !== undefined) updates.descripcion = descripcion;
+    if (calificacion !== undefined) updates.calificacion = Number(calificacion);
+    if (porcentaje !== undefined) updates.porcentaje = Number(porcentaje);
+
+    if (Object.keys(updates).length === 0) {
+      res.status(400).json({ error: 'No se proporcionaron campos para actualizar' });
+      return;
+    }
+
+    const notaRef = notasRef(uid, idAsignatura).doc(idNota);
+    const notaSnap = await notaRef.get();
+
+    if (!notaSnap.exists) {
+      res.status(404).json({ error: 'Nota no encontrada' });
+      return;
+    }
+
+    await notaRef.update(updates);
+    await actualizarPromedioAsignatura(uid, idAsignatura);
+
+    res.status(200).json({ message: 'Nota actualizada exitosamente', data: updates });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Error al actualizar la nota' });
   }
 };

@@ -34,26 +34,27 @@ export const crearAsignatura = async (req: Request, res: Response): Promise<void
       return;
     }
 
-    const { nombre, profesor, periodo } = req.body;
+    const { nombre, creditos } = req.body;
 
-    if (!nombre || !profesor || !periodo) {
-      res.status(400).json({ error: 'nombre, profesor y periodo son obligatorios' });
+    if (!nombre) {
+      res.status(400).json({ error: 'El nombre es obligatorio' });
       return;
     }
 
-    const docRef = await asignaturasRef(uid).add({
+    const creditosNum = creditos !== undefined ? Number(creditos) : 3;
+
+    const data = {
       nombre,
-      profesor,
-      periodo,
-      promedioActual: 0,
-    });
+      creditos: creditosNum,
+      promedio: 0,
+      aprueba: false,
+    };
+
+    const docRef = await asignaturasRef(uid).add(data);
 
     const asignatura: Asignatura = {
       id: docRef.id,
-      nombre,
-      profesor,
-      periodo,
-      promedioActual: 0,
+      ...data,
     };
 
     res.status(201).json({ message: 'Asignatura creada exitosamente', data: asignatura });
@@ -78,9 +79,9 @@ export const obtenerAsignaturas = async (req: Request, res: Response): Promise<v
       return {
         id: doc.id,
         nombre: data.nombre as string,
-        profesor: data.profesor as string,
-        periodo: data.periodo as string,
-        promedioActual: data.promedioActual as number,
+        creditos: (data.creditos as number) || 3,
+        promedio: (data.promedio as number) || 0,
+        aprueba: (data.aprueba as boolean) || false,
       };
     });
 
@@ -121,5 +122,50 @@ export const eliminarAsignatura = async (req: Request, res: Response): Promise<v
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: 'Error al eliminar la asignatura' });
+  }
+};
+
+export const actualizarAsignatura = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const uid = req.user?.uid;
+    const id = paramString(req.params.id);
+
+    if (!uid) {
+      res.status(401).json({ error: 'Usuario no autenticado' });
+      return;
+    }
+
+    if (!id) {
+      res.status(400).json({ error: 'ID de asignatura requerido' });
+      return;
+    }
+
+    const { nombre, creditos, promedio, aprueba } = req.body;
+
+    const updates: any = {};
+    if (nombre !== undefined) updates.nombre = nombre;
+    if (creditos !== undefined) updates.creditos = Number(creditos);
+    if (promedio !== undefined) updates.promedio = Number(promedio);
+    if (aprueba !== undefined) updates.aprueba = Boolean(aprueba);
+
+    if (Object.keys(updates).length === 0) {
+      res.status(400).json({ error: 'No se proporcionaron campos para actualizar' });
+      return;
+    }
+
+    const docRef = asignaturasRef(uid).doc(id);
+    const docSnap = await docRef.get();
+
+    if (!docSnap.exists) {
+      res.status(404).json({ error: 'Asignatura no encontrada' });
+      return;
+    }
+
+    await docRef.update(updates);
+
+    res.status(200).json({ message: 'Asignatura actualizada exitosamente', data: updates });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Error al actualizar la asignatura' });
   }
 };

@@ -1,23 +1,22 @@
 export interface Usuario {
   uid: string;
-  nombre: string;
+  nombres: string;
   correo: string;
   rol: string;
-  codigo?: string;
-  carrera?: string;
+  codigo: string;
 }
 
 export interface Asignatura {
   id: string;
   nombre: string;
-  profesor: string;
-  periodo: string;
-  promedioActual: number;
+  creditos: number;
+  promedio: number;
+  aprueba: boolean;
 }
 
 export interface Nota {
   id: string;
-  nombre: string;
-  nota: number;
+  descripcion: string;
   porcentaje: number;
+  calificacion: number;
 }

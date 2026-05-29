@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { crearUsuario, obtenerPerfil } from '../controllers/usuarioController';
+import { crearUsuario, obtenerPerfil, actualizarPerfil } from '../controllers/usuarioController';
 import { authMiddleware } from '../middlewares/authMiddleware';
 
 const router = Router();
@@ -9,5 +9,8 @@ router.post('/', crearUsuario);
 
 // GET: Perfil del usuario autenticado
 router.get('/perfil', authMiddleware, obtenerPerfil);
+
+// PATCH: Actualizar perfil del usuario autenticado
+router.patch('/perfil', authMiddleware, actualizarPerfil);
 
 export default router;
