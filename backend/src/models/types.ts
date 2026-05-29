@@ -4,11 +4,14 @@ export interface Usuario {
   correo: string;
   rol: string;
   codigo: string;
+  beca_promedio: number;
+  beca_cumple: boolean;
+  promedio: number;
 }
 
 export interface Asignatura {
   id: string;
-  nombre: string;
+  descripcion: string;
   creditos: number;
   promedio: number;
   aprueba: boolean;

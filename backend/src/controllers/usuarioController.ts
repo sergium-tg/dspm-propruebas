@@ -4,7 +4,7 @@ import { Usuario } from '../models/types';
 
 export const crearUsuario = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { uid, nombres, correo, rol, codigo } = req.body as Partial<Usuario>;
+    const { uid, nombres, correo, rol, codigo, beca_promedio } = req.body as Partial<Usuario>;
 
     if (!uid || !nombres || !correo || !rol || !codigo) {
       res.status(400).json({ error: 'uid, nombres, correo, rol y codigo son obligatorios' });
@@ -17,6 +17,9 @@ export const crearUsuario = async (req: Request, res: Response): Promise<void> =
       correo,
       rol,
       codigo,
+      beca_promedio: beca_promedio !== undefined ? Number(beca_promedio) : 4.0,
+      beca_cumple: false,
+      promedio: 0,
     };
 
     await db.collection('usuarios').doc(uid).set(usuario);
@@ -44,7 +47,19 @@ export const obtenerPerfil = async (req: Request, res: Response): Promise<void> 
       return;
     }
 
-    res.status(200).json(doc.data() as Usuario);
+    const data = doc.data();
+    const usuario: Usuario = {
+      uid: data?.uid || uid,
+      nombres: data?.nombres || data?.nombre || '',
+      correo: data?.correo || '',
+      rol: data?.rol || '',
+      codigo: data?.codigo || '',
+      beca_promedio: data?.beca_promedio !== undefined ? data.beca_promedio : 4.0,
+      beca_cumple: data?.beca_cumple !== undefined ? data.beca_cumple : false,
+      promedio: data?.promedio !== undefined ? data.promedio : 0,
+    };
+
+    res.status(200).json(usuario);
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: 'Error al obtener el perfil' });
@@ -60,18 +75,23 @@ export const actualizarPerfil = async (req: Request, res: Response): Promise<voi
       return;
     }
 
-    const { nombres, codigo } = req.body;
+    const { nombres, codigo, beca_promedio } = req.body;
 
-    const updates: Partial<Usuario> = {};
+    const updates: any = {
+      uid,
+      correo: req.user?.email || '',
+      rol: 'estudiante',
+    };
     if (nombres !== undefined) updates.nombres = nombres;
     if (codigo !== undefined) updates.codigo = codigo;
+    if (beca_promedio !== undefined) updates.beca_promedio = Number(beca_promedio);
 
-    if (Object.keys(updates).length === 0) {
+    if (Object.keys(req.body).length === 0) {
       res.status(400).json({ error: 'No se proporcionaron campos para actualizar' });
       return;
     }
 
-    await db.collection('usuarios').doc(uid).update(updates);
+    await db.collection('usuarios').doc(uid).set(updates, { merge: true });
 
     res.status(200).json({ message: 'Perfil actualizado exitosamente', data: updates });
   } catch (error) {

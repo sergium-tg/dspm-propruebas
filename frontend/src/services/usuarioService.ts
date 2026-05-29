@@ -3,18 +3,16 @@ import type { CrearUsuarioResponse, Usuario } from '../types/entities';
 
 export async function crearUsuario(
   uid: string,
-  nombre: string,
+  nombres: string,
   correo: string,
   rol: string = 'estudiante',
-  carrera?: string,
-  codigo?: string
+  codigo: string
 ): Promise<Usuario> {
   const { data } = await apiClient.post<CrearUsuarioResponse>('/api/usuarios', {
     uid,
-    nombre,
+    nombres,
     correo,
     rol,
-    carrera,
     codigo,
   });
   return data.data;
@@ -22,11 +20,6 @@ export async function crearUsuario(
 
 export async function obtenerUsuarioPorUid(uid: string): Promise<Usuario> {
   const { data } = await apiClient.get<Usuario>(`/api/usuarios/perfil`);
-  return data;
-}
-
-export async function obtenerUsuario(id: number): Promise<Usuario> {
-  const { data } = await apiClient.get<Usuario>(`/api/usuarios/${id}`);
   return data;
 }
 

@@ -1,13 +1,18 @@
 import { apiClient } from './apiClient';
 import type { Asignatura, CrearAsignaturaResponse } from '../types/entities';
 
-export async function obtenerAsignaturas(usuarioUid: string): Promise<Asignatura[]> {
-  const { data } = await apiClient.get<Asignatura[]>(`/api/asignaturas/usuario/${usuarioUid}`);
+export async function obtenerAsignaturas(): Promise<Asignatura[]> {
+  const { data } = await apiClient.get<Asignatura[]>('/api/asignaturas');
+  return data;
+}
+
+export async function obtenerAsignatura(id: string): Promise<Asignatura> {
+  const { data } = await apiClient.get<Asignatura>(`/api/asignaturas/${id}`);
   return data;
 }
 
 export async function crearAsignatura(
-  asignatura: Omit<Asignatura, 'id'>
+  asignatura: Omit<Asignatura, 'id' | 'promedio' | 'aprueba'>
 ): Promise<Asignatura> {
   const { data } = await apiClient.post<CrearAsignaturaResponse>(
     '/api/asignaturas',
@@ -20,7 +25,7 @@ export async function actualizarAsignatura(
   id: string,
   asignatura: Partial<Asignatura>
 ): Promise<Asignatura> {
-  const { data } = await apiClient.put<Asignatura>(
+  const { data } = await apiClient.patch<Asignatura>(
     `/api/asignaturas/${id}`,
     asignatura,
   );

@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import { db } from '../config/firebaseAdmin';
-import { Nota } from '../models/types';
-import { calcularPromedioDesdeNotas } from '../services/calculations';
+import { Nota, Asignatura, Usuario } from '../models/types';
+import { calcularPromedioDesdeNotas, calcularPromedioGeneral, verificarBeca } from '../services/calculations';
 
 const paramString = (value: string | string[] | undefined): string | undefined =>
   Array.isArray(value) ? value[0] : value;
@@ -16,6 +16,34 @@ const notasRef = (uid: string, idAsignatura: string) =>
 
 const asignaturaDocRef = (uid: string, idAsignatura: string) =>
   db.collection('usuarios').doc(uid).collection('asignaturas').doc(idAsignatura);
+
+const usuarioDocRef = (uid: string) => db.collection('usuarios').doc(uid);
+
+const actualizarDatosGlobales = async (uid: string): Promise<void> => {
+  const asignaturasSnap = await db.collection('usuarios').doc(uid).collection('asignaturas').get();
+  const asignaturas: Asignatura[] = asignaturasSnap.docs.map((doc) => {
+    const data = doc.data();
+    return {
+      id: doc.id,
+      descripcion: (data.descripcion || data.nombre) as string,
+      creditos: data.creditos as number,
+      promedio: data.promedio as number,
+      aprueba: data.aprueba as boolean,
+    };
+  });
+
+  const usuarioSnap = await usuarioDocRef(uid).get();
+  const usuarioData = usuarioSnap.data() as Usuario;
+  
+  const promedioGeneral = calcularPromedioGeneral(asignaturas);
+  const becaPromedio = usuarioData.beca_promedio || 4.0;
+  const beca_cumple = verificarBeca(promedioGeneral, becaPromedio);
+
+  await usuarioDocRef(uid).update({
+    promedio: promedioGeneral,
+    beca_cumple,
+  });
+};
 
 const actualizarPromedioAsignatura = async (uid: string, idAsignatura: string): Promise<void> => {
   const snapshot = await notasRef(uid, idAsignatura).get();
@@ -32,6 +60,9 @@ const actualizarPromedioAsignatura = async (uid: string, idAsignatura: string): 
   const promedio = calcularPromedioDesdeNotas(notas);
   const aprueba = promedio >= 3.0; // Asumiendo 3.0 como nota de aprobación
   await asignaturaDocRef(uid, idAsignatura).update({ promedio, aprueba });
+  
+  // Después de actualizar la asignatura, actualizamos los datos globales del usuario
+  await actualizarDatosGlobales(uid);
 };
 
 export const agregarNota = async (req: Request, res: Response): Promise<void> => {

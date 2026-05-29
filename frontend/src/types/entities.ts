@@ -1,10 +1,12 @@
 export interface Usuario {
   uid: string;
-  nombre: string;
+  nombres: string;
   correo: string;
   rol: string;
-  carrera?: string;
-  codigo?: string;
+  codigo: string;
+  beca_promedio: number;
+  beca_cumple: boolean;
+  promedio: number;
 }
 
 export interface Estudiante {
@@ -15,7 +17,6 @@ export interface Estudiante {
   beneficios_cumple: boolean;
   promedio_semestral: number;
   usuario_uid: string;
-  carrera?: string;
 }
 
 export interface CrearUsuarioResponse {
@@ -30,14 +31,20 @@ export interface CrearEstudianteResponse {
 
 export interface Asignatura {
   id: string;
-  nombre: string;
+  descripcion: string;
   creditos: number;
-  nota?: number;
-  usuario_uid: string;
-  semestre?: string;
+  promedio: number;
+  aprueba: boolean;
 }
 
 export interface CrearAsignaturaResponse {
   message: string;
   data: Asignatura;
+}
+
+export interface Nota {
+  id: string;
+  descripcion: string;
+  porcentaje: number;
+  calificacion: number;
 }

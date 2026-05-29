@@ -37,8 +37,7 @@ const Login: React.FC = () => {
             title={login.title}
             email={login.email}
             password={login.password}
-            nombre={login.nombre}
-            carrera={login.carrera}
+            nombres={login.nombres}
             codigo={login.codigo}
             busy={login.busy}
             error={login.error}
@@ -46,8 +45,7 @@ const Login: React.FC = () => {
             submitLabel={login.submitLabel}
             onEmailChange={login.setEmail}
             onPasswordChange={login.setPassword}
-            onNombreChange={login.setNombre}
-            onCarreraChange={login.setCarrera}
+            onNombresChange={login.setNombres}
             onCodigoChange={login.setCodigo}
             onSubmit={login.submit}
             onModeChange={login.setMode}

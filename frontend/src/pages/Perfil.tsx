@@ -33,8 +33,8 @@ const Perfil: React.FC = () => {
 
   // Campos del formulario
   const [codigo, setCodigo] = useState('');
-  const [nombre, setNombre] = useState('');
-  const [carrera, setCarrera] = useState('');
+  const [nombres, setNombres] = useState('');
+  const [becaPromedio, setBecaPromedio] = useState('4.0');
 
   useEffect(() => {
     if (!user) {
@@ -53,13 +53,27 @@ const Perfil: React.FC = () => {
         if (cancelled) return;
         setUsuario(data);
         setCodigo(data.codigo || '');
-        setNombre(data.nombre || '');
-        setCarrera(data.carrera || '');
-      } catch (err: unknown) {
+        setNombres(data.nombres || '');
+        setBecaPromedio((data.beca_promedio || 4.0).toString());
+      } catch (err: any) {
         if (cancelled) return;
-        const message = err instanceof Error ? err.message : 'Error al cargar el perfil';
-        setError(message);
-        setUsuario(null);
+        if (err.response?.status === 404) {
+          // Si no existe, permitimos que el usuario lo cree
+          setUsuario({
+            uid: user.uid,
+            nombres: '',
+            correo: user.email || '',
+            rol: 'estudiante',
+            codigo: '',
+            beca_promedio: 4.0,
+            beca_cumple: false,
+            promedio: 0,
+          });
+        } else {
+          const message = err instanceof Error ? err.message : 'Error al cargar el perfil';
+          setError(message);
+          setUsuario(null);
+        }
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -77,9 +91,9 @@ const Perfil: React.FC = () => {
 
     try {
       const actualizado = await actualizarUsuario(user.uid, {
-        nombre: nombre.trim(),
+        nombres: nombres.trim(),
         codigo: codigo.trim(),
-        carrera: carrera.trim(),
+        beca_promedio: parseFloat(becaPromedio) || 4.0,
       });
       setUsuario(actualizado);
       setToastMessage('Perfil guardado exitosamente');
@@ -138,20 +152,21 @@ const Perfil: React.FC = () => {
               </IonItem>
 
               <IonItem>
-                <IonLabel position="floating">Nombre Completo</IonLabel>
+                <IonLabel position="floating">Nombres</IonLabel>
                 <IonInput
                   type="text"
-                  value={nombre}
-                  onIonInput={(e) => setNombre(e.detail.value ?? '')}
+                  value={nombres}
+                  onIonInput={(e) => setNombres(e.detail.value ?? '')}
                 />
               </IonItem>
 
               <IonItem>
-                <IonLabel position="floating">Carrera</IonLabel>
+                <IonLabel position="floating">Meta de promedio (Beca)</IonLabel>
                 <IonInput
-                  type="text"
-                  value={carrera}
-                  onIonInput={(e) => setCarrera(e.detail.value ?? '')}
+                  type="number"
+                  step="0.1"
+                  value={becaPromedio}
+                  onIonInput={(e) => setBecaPromedio(e.detail.value ?? '')}
                 />
               </IonItem>
 

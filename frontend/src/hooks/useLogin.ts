@@ -14,8 +14,7 @@ export function useLogin() {
   const [mode, setMode] = useState<LoginMode>('login');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [nombre, setNombre] = useState('');
-  const [carrera, setCarrera] = useState('');
+  const [nombres, setNombres] = useState('');
   const [codigo, setCodigo] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -42,10 +41,9 @@ export function useLogin() {
           try {
             await crearUsuario(
               uid,
-              nombre.trim(),
+              nombres.trim(),
               emailTrimmed,
               'estudiante',
-              carrera.trim(),
               codigo.trim(),
             );
           } catch (syncErr) {
@@ -69,7 +67,7 @@ export function useLogin() {
         setBusy(false);
       }
     },
-    [mode, email, password, nombre, carrera, codigo],
+    [mode, email, password, nombres, codigo],
   );
 
   const title =
@@ -91,10 +89,8 @@ export function useLogin() {
     setEmail,
     password,
     setPassword,
-    nombre,
-    setNombre,
-    carrera,
-    setCarrera,
+    nombres,
+    setNombres,
     codigo,
     setCodigo,
     busy,

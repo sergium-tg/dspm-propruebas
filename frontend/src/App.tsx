@@ -7,6 +7,8 @@ import Login from './pages/Login';
 import Home from './pages/Home';
 import Perfil from './pages/Perfil';
 import Asignaturas from './pages/Asignaturas';
+import AsignaturaDetalle from './pages/AsignaturaDetalle';
+import NotaDetalle from './pages/NotaDetalle';
 
 import '@ionic/react/css/core.css';
 import '@ionic/react/css/normalize.css';
@@ -34,6 +36,8 @@ const App: React.FC = () => (
           <Route exact path="/home" component={Home} />
           <Route exact path="/perfil" component={Perfil} />
           <Route exact path="/asignaturas" component={Asignaturas} />
+          <Route exact path="/asignaturas/:id" component={AsignaturaDetalle} />
+          <Route exact path="/asignaturas/:idAsignatura/notas/:idNota" component={NotaDetalle} />
           <Route exact path="/" component={Index} />
           <Route>
             <Redirect to="/" />

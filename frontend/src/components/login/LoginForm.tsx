@@ -13,8 +13,7 @@ export interface LoginFormProps {
   title: string;
   email: string;
   password: string;
-  nombre?: string;
-  carrera?: string;
+  nombres?: string;
   codigo?: string;
   busy: boolean;
   error: string | null;
@@ -22,8 +21,7 @@ export interface LoginFormProps {
   submitLabel: string;
   onEmailChange: (value: string) => void;
   onPasswordChange: (value: string) => void;
-  onNombreChange?: (value: string) => void;
-  onCarreraChange?: (value: string) => void;
+  onNombresChange?: (value: string) => void;
   onCodigoChange?: (value: string) => void;
   onSubmit: (e: React.FormEvent) => void;
   onModeChange: (mode: LoginMode) => void;
@@ -34,8 +32,7 @@ const LoginForm: React.FC<LoginFormProps> = ({
   title,
   email,
   password,
-  nombre,
-  carrera,
+  nombres,
   codigo,
   busy,
   error,
@@ -43,8 +40,7 @@ const LoginForm: React.FC<LoginFormProps> = ({
   submitLabel,
   onEmailChange,
   onPasswordChange,
-  onNombreChange,
-  onCarreraChange,
+  onNombresChange,
   onCodigoChange,
   onSubmit,
   onModeChange,
@@ -61,16 +57,16 @@ const LoginForm: React.FC<LoginFormProps> = ({
       </div>
 
       <form onSubmit={onSubmit} className="app-space-y-4 app-login-form">
-        {mode === 'register' && onNombreChange && (
+        {mode === 'register' && onNombresChange && (
           <div className="app-login-field">
-            <label htmlFor="register-nombre">Nombre Completo</label>
+            <label htmlFor="register-nombre">Nombres</label>
             <IonInput
               id="register-nombre"
               className="app-input"
               fill="outline"
               type="text"
-              value={nombre}
-              onIonInput={(e) => onNombreChange(e.detail.value ?? '')}
+              value={nombres}
+              onIonInput={(e) => onNombresChange(e.detail.value ?? '')}
               required
               autocomplete="name"
             />
@@ -108,24 +104,9 @@ const LoginForm: React.FC<LoginFormProps> = ({
           </div>
         )}
 
-        {mode === 'register' && onCarreraChange && (
-          <div className="app-login-field">
-            <label htmlFor="register-carrera">Carrera</label>
-            <IonInput
-              id="register-carrera"
-              className="app-input"
-              fill="outline"
-              type="text"
-              value={carrera}
-              onIonInput={(e) => onCarreraChange(e.detail.value ?? '')}
-              required
-            />
-          </div>
-        )}
-
         {mode === 'register' && onCodigoChange && (
           <div className="app-login-field">
-            <label htmlFor="register-codigo">Código de Estudiante</label>
+            <label htmlFor="register-codigo">Código</label>
             <IonInput
               id="register-codigo"
               className="app-input"

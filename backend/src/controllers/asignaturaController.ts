@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import type { CollectionReference } from 'firebase-admin/firestore';
 import { db } from '../config/firebaseAdmin';
 import { Asignatura } from '../models/types';
+import { actualizarDatosGlobalesUsuario } from '../services/userService';
 
 const paramString = (value: string | string[] | undefined): string | undefined =>
   Array.isArray(value) ? value[0] : value;
@@ -34,17 +35,17 @@ export const crearAsignatura = async (req: Request, res: Response): Promise<void
       return;
     }
 
-    const { nombre, creditos } = req.body;
+    const { descripcion, creditos } = req.body;
 
-    if (!nombre) {
-      res.status(400).json({ error: 'El nombre es obligatorio' });
+    if (!descripcion) {
+      res.status(400).json({ error: 'La descripción es obligatoria' });
       return;
     }
 
     const creditosNum = creditos !== undefined ? Number(creditos) : 3;
 
     const data = {
-      nombre,
+      descripcion,
       creditos: creditosNum,
       promedio: 0,
       aprueba: false,
@@ -78,7 +79,7 @@ export const obtenerAsignaturas = async (req: Request, res: Response): Promise<v
       const data = doc.data();
       return {
         id: doc.id,
-        nombre: data.nombre as string,
+        descripcion: (data.descripcion || data.nombre) as string,
         creditos: (data.creditos as number) || 3,
         promedio: (data.promedio as number) || 0,
         aprueba: (data.aprueba as boolean) || false,
@@ -89,6 +90,45 @@ export const obtenerAsignaturas = async (req: Request, res: Response): Promise<v
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: 'Error al obtener las asignaturas' });
+  }
+};
+
+export const obtenerAsignaturaPorId = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const uid = req.user?.uid;
+    const id = paramString(req.params.id);
+
+    if (!uid) {
+      res.status(401).json({ error: 'Usuario no autenticado' });
+      return;
+    }
+
+    if (!id) {
+      res.status(400).json({ error: 'ID de asignatura requerido' });
+      return;
+    }
+
+    const docRef = asignaturasRef(uid).doc(id);
+    const docSnap = await docRef.get();
+
+    if (!docSnap.exists) {
+      res.status(404).json({ error: 'Asignatura no encontrada' });
+      return;
+    }
+
+    const data = docSnap.data();
+    const asignatura: Asignatura = {
+      id: docSnap.id,
+      descripcion: (data?.descripcion || data?.nombre) as string,
+      creditos: (data?.creditos as number) || 3,
+      promedio: (data?.promedio as number) || 0,
+      aprueba: (data?.aprueba as boolean) || false,
+    };
+
+    res.status(200).json(asignatura);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Error al obtener la asignatura' });
   }
 };
 
@@ -140,10 +180,10 @@ export const actualizarAsignatura = async (req: Request, res: Response): Promise
       return;
     }
 
-    const { nombre, creditos, promedio, aprueba } = req.body;
+    const { descripcion, creditos, promedio, aprueba } = req.body;
 
     const updates: any = {};
-    if (nombre !== undefined) updates.nombre = nombre;
+    if (descripcion !== undefined) updates.descripcion = descripcion;
     if (creditos !== undefined) updates.creditos = Number(creditos);
     if (promedio !== undefined) updates.promedio = Number(promedio);
     if (aprueba !== undefined) updates.aprueba = Boolean(aprueba);

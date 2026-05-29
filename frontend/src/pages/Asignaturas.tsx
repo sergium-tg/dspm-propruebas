@@ -38,7 +38,7 @@ const Asignaturas: React.FC = () => {
 
   // Modal para crear asignatura
   const [showModal, setShowModal] = useState(false);
-  const [nuevaAsignatura, setNuevaAsignatura] = useState({ nombre: '', creditos: 3 });
+  const [nuevaAsignatura, setNuevaAsignatura] = useState({ descripcion: '', creditos: 3 });
 
   useEffect(() => {
     if (!user) {
@@ -53,7 +53,7 @@ const Asignaturas: React.FC = () => {
 
     (async () => {
       try {
-        const data = await obtenerAsignaturas(user.uid);
+        const data = await obtenerAsignaturas();
         if (cancelled) return;
         setAsignaturas(data);
       } catch (err: unknown) {
@@ -73,8 +73,8 @@ const Asignaturas: React.FC = () => {
 
   const handleCrearAsignatura = async () => {
     if (!user) return;
-    if (!nuevaAsignatura.nombre.trim()) {
-      setToastMessage('El nombre es obligatorio');
+    if (!nuevaAsignatura.descripcion.trim()) {
+      setToastMessage('La descripción es obligatoria');
       setToastColor('danger');
       setShowToast(true);
       return;
@@ -83,12 +83,11 @@ const Asignaturas: React.FC = () => {
     try {
       const creditosValidados = Math.min(12, Math.max(1, Math.floor(nuevaAsignatura.creditos || 3)));
       const creada = await crearAsignatura({
-        nombre: nuevaAsignatura.nombre.trim(),
+        descripcion: nuevaAsignatura.descripcion.trim(),
         creditos: creditosValidados,
-        usuario_uid: user.uid,
       });
       setAsignaturas([...asignaturas, creada]);
-      setNuevaAsignatura({ nombre: '', creditos: 3 });
+      setNuevaAsignatura({ descripcion: '', creditos: 3 });
       setShowModal(false);
       setToastMessage('Asignatura creada exitosamente');
       setToastColor('success');
@@ -120,8 +119,7 @@ const Asignaturas: React.FC = () => {
   };
 
   const handleVerDetalles = (id: string) => {
-    // Navegar a detalles de asignatura cuando esté implementado
-    console.log('Ver detalles de asignatura:', id);
+    history.push(`/asignaturas/${id}`);
   };
 
   return (
@@ -165,10 +163,10 @@ const Asignaturas: React.FC = () => {
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '0.75rem' }}>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <p style={{ fontWeight: 600, margin: '0 0 0.25rem 0' }}>
-                      {asignatura.nombre}
+                      {asignatura.descripcion}
                     </p>
                     <p className="app-muted" style={{ margin: 0, fontSize: '0.875rem' }}>
-                      {asignatura.creditos} créditos · Promedio {asignatura.nota?.toFixed(2) || '0.00'}
+                      {asignatura.creditos} créditos · Promedio {asignatura.promedio?.toFixed(2) || '0.00'}
                     </p>
                   </div>
                   <div style={{ display: 'flex', gap: '0.25rem' }}>
@@ -203,10 +201,10 @@ const Asignaturas: React.FC = () => {
           <IonContent>
             <div style={{ padding: '1.5rem' }} className="app-space-y-4">
               <IonItem>
-                <IonLabel position="floating">Nombre</IonLabel>
+                <IonLabel position="floating">Descripción</IonLabel>
                 <IonInput
-                  value={nuevaAsignatura.nombre}
-                  onIonInput={(e) => setNuevaAsignatura({ ...nuevaAsignatura, nombre: e.detail.value ?? '' })}
+                  value={nuevaAsignatura.descripcion}
+                  onIonInput={(e) => setNuevaAsignatura({ ...nuevaAsignatura, descripcion: e.detail.value ?? '' })}
                 />
               </IonItem>
 

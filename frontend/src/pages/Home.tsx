@@ -17,7 +17,7 @@ import { getFirebaseAuth } from '../config/firebase';
 import { useAuth } from '../hooks/useAuth';
 import { useEffect, useState } from 'react';
 import { obtenerUsuarioPorUid } from '../services/usuarioService';
-import type { Usuario } from '../types/entities';
+import type { Usuario, Estudiante } from '../types/entities';
 import ProtectedRoute from '../components/auth/ProtectedRoute';
 import StudentCard from '../components/home/StudentCard';
 
@@ -44,10 +44,14 @@ const HomeContent: React.FC = () => {
         const data = await obtenerUsuarioPorUid(user.uid);
         if (cancelled) return;
         setUsuario(data);
-      } catch (err: unknown) {
+      } catch (err: any) {
         if (cancelled) return;
-        const message = err instanceof Error ? err.message : 'Error al cargar el perfil';
-        setError(message);
+        if (err.response?.status === 404) {
+          setError('Perfil no encontrado. Por favor, completa tu información en la sección de Perfil.');
+        } else {
+          const message = err instanceof Error ? err.message : 'Error al cargar el perfil';
+          setError(message);
+        }
         setUsuario(null);
       } finally {
         if (!cancelled) setLoading(false);
@@ -73,15 +77,14 @@ const HomeContent: React.FC = () => {
   };
 
   // Convertir Usuario a formato compatible con StudentCard
-  const estudianteCompatible = usuario ? {
-    codigo: usuario.codigo || '',
-    nombres: usuario.nombre || '',
+  const estudianteCompatible: Estudiante | null = usuario ? {
+    codigo: usuario.codigo || '-',
+    nombres: usuario.nombres || 'Sin nombre',
     apellidos: '',
-    beneficios_promedio: 0,
-    beneficios_cumple: false,
-    promedio_semestral: 0,
+    beneficios_promedio: usuario.beca_promedio || 4.0,
+    beneficios_cumple: usuario.beca_cumple || false,
+    promedio_semestral: usuario.promedio || 0,
     usuario_uid: usuario.uid,
-    carrera: usuario.carrera,
   } : null;
 
   return (
